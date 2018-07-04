@@ -14,9 +14,17 @@ If you use this code in your projects, please cite our paper:
 }
 ```
 
-## Run pydnet on a webcam
+For more details:
+[arXiv](https://arxiv.org/abs/1806.11430)
 
-To run pydnet on a webcam, just launch
+## Requirements
+
+* `Tensorflow 1.8` (recomended) 
+* `python packages` such as opencv, matplotlib
+
+## Run pydnet on webcam stream
+
+To run pydnet, just launch
 
 ```
 python webcam.py --checkpoint_dir /checkpoint/IROS18/pydnet --resolution [1,2,3]
@@ -24,5 +32,5 @@ python webcam.py --checkpoint_dir /checkpoint/IROS18/pydnet --resolution [1,2,3]
 
 ## Train pydnet from scratch
 
-Code for training will be (eventually) uploaded in future.
+Code for training will be (eventually) uploaded.
 Meanwhile, you can train pydnet by embedding it into https://github.com/mrharicot/monodepth
