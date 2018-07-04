@@ -17,6 +17,9 @@ If you use this code in your projects, please cite our paper:
 For more details:
 [arXiv](https://arxiv.org/abs/1806.11430)
 
+Demo video:
+[youtube](https://www.youtube.com/watch?v=Q6ao4Jrulns)
+
 ## Requirements
 
 * `Tensorflow 1.8` (recomended) 
