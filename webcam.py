@@ -65,6 +65,8 @@ def main(_):
         sess.run(init)
         loader.restore(sess, args.checkpoint_dir)
         while True:
+          for i in range(4):
+            cam.grab()
           ret_val, img = cam.read() 
           img = cv2.resize(img, (width, height)).astype(np.float32) / 255.
           img_batch = np.expand_dims(img, 0)
