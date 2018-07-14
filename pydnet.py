@@ -130,7 +130,8 @@ class pydnet(object):
       
     # Upsampling layer
     def bilinear_upsampling_by_deconvolution(self,x):
-      return deconv2d_leaky(x, [2, 2, x.shape[3], x.shape[3]], x.shape[3], 2, True)
+      f = x.get_shape().as_list()[-1]
+      return deconv2d_leaky(x, [2, 2, f, f], f, 2, True)
 
     # Disparity prediction layer
     def get_disp(self, x):
