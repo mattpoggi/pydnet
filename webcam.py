@@ -69,17 +69,21 @@ def main(_):
             cam.grab()
           ret_val, img = cam.read() 
           img = cv2.resize(img, (width, height)).astype(np.float32) / 255.
-          img_batch = np.expand_dims(img, 0)
+          img = np.expand_dims(img, 0)
           start = time.time()
-          disp = sess.run(model.results[args.resolution-1], feed_dict={placeholders['im0']: img_batch})
+          disp = sess.run(model.results[args.resolution-1], feed_dict={placeholders['im0']: img})
           end = time.time()
 
-          disp_color = applyColorMap(disp[0,:,:,0]*20, 'plasma')
+          disp = applyColorMap(disp[0,:,:,0]*20, 'plasma')
           toShow = (np.concatenate((img, disp_color), 0)*255.).astype(np.uint8)
           toShow = cv2.resize(toShow, (width/2, height))
 
           cv2.imshow('pydnet', toShow)
           k = cv2.waitKey(1)
+          del img
+          del disp
+          del toShow
+          
           if k == 1048603 or k == 27: 
             break  # esc to quit
           if k == 1048688:
