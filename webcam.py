@@ -79,17 +79,17 @@ def main(_):
           toShow = cv2.resize(toShow, (width/2, height))
 
           cv2.imshow('pydnet', toShow)
-          k = cv2.waitKey(1)
-          del img
-          del disp
-          del toShow
-          
+          k = cv2.waitKey(1)         
           if k == 1048603 or k == 27: 
             break  # esc to quit
           if k == 1048688:
             cv2.waitKey(0) # 'p' to pause
 
           print("Time: " + str(end - start))
+          del img
+          del disp
+          del toShow
+          
         cam.release()        
 
 if __name__ == '__main__':
