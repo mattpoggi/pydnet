@@ -74,7 +74,7 @@ def main(_):
           disp = sess.run(model.results[args.resolution-1], feed_dict={placeholders['im0']: img})
           end = time.time()
 
-          disp = applyColorMap(disp[0,:,:,0]*20, 'plasma')
+          disp_color = applyColorMap(disp[0,:,:,0]*20, 'plasma')
           toShow = (np.concatenate((img, disp_color), 0)*255.).astype(np.uint8)
           toShow = cv2.resize(toShow, (width/2, height))
 
