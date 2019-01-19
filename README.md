@@ -35,5 +35,9 @@ python webcam.py --checkpoint_dir /checkpoint/IROS18/pydnet --resolution [1,2,3]
 
 ## Train pydnet from scratch
 
-Code for training will be (eventually) uploaded.
-Meanwhile, you can train pydnet by embedding it into https://github.com/mrharicot/monodepth
+### Requirements
+
+* `monodepth (https://github.com/mrharicot/monodepth)` framework by Clément Godard
+
+After you have cloned the monodepth repository, add to it the scripts contained in `training_code` folder from this repository (you have to replace the original `monodepth_model.py` script).
+Then you can train pydnet inside monodepth framework.
