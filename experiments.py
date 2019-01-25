@@ -41,8 +41,8 @@ parser = argparse.ArgumentParser(description='Argument parser')
 parser.add_argument('--dataset',           type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
 parser.add_argument('--datapath',          type=str,   help='path to the data', required=True)
 parser.add_argument('--filenames',         type=str,   help='path to the filenames text file', required=True)
-parser.add_argument('--output_directory',  type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='checkpoint/IROS18/pydnet')
-parser.add_argument('--checkpoint',        type=str,   help='path to a specific checkpoint to load', default='checkpoint/IROS18/pydnet')
+parser.add_argument('--output_directory',  type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='.')
+parser.add_argument('--checkpoint_dir',        type=str,   help='path to a specific checkpoint to load', default='checkpoint/IROS18/pydnet')
 parser.add_argument('--resolution',        type=int, default=1, help='resolution [1:H, 2:Q, 3:E]')
 
 args = parser.parse_args()
@@ -82,7 +82,7 @@ def test(params):
     threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
 
     # RESTORE
-    train_saver.restore(sess, args.checkpoint)
+    train_saver.restore(sess, args.checkpoint_dir)
 
     # GET TEST IMAGES NAMES
     f = open(args.filenames, 'r')
@@ -102,7 +102,7 @@ def test(params):
 
     print('Saving disparities as .npy')
     if args.output_directory == '':
-        output_directory = os.path.dirname(args.checkpoint)
+        output_directory = os.path.dirname(args.checkpoint_dir)
     else:
         output_directory = args.output_directory
     np.save(output_directory + '/disparities.npy', disparities)

@@ -45,8 +45,7 @@ Then you can train pydnet inside monodepth framework.
 ## Evaluate pydnet on Eigen split
 
 ```
-python webcam.py --checkpoint_dir /checkpoint/IROS18/pydnet --resolution [1,2,3]
+python experiments.py --datapath PATH_TO_KITTI --filenames PATH_TO_FILELIST --checkpoint_dir /checkpoint/IROS18/pydnet --resolution [1,2,3]
 ```
 
-After you have cloned the monodepth repository, add to it the scripts contained in `training_code` folder from this repository (you have to replace the original `monodepth_model.py` script).
-Then you can train pydnet inside monodepth framework.
+This script generates `disparity.npy`, that can be evaluated using the evaluation tools by Clément Godard 
