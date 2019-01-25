@@ -43,6 +43,7 @@ parser.add_argument('--datapath',          type=str,   help='path to the data', 
 parser.add_argument('--filenames',         type=str,   help='path to the filenames text file', required=True)
 parser.add_argument('--output_directory',  type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='checkpoint/IROS18/pydnet')
 parser.add_argument('--checkpoint',        type=str,   help='path to a specific checkpoint to load', default='checkpoint/IROS18/pydnet')
+parser.add_argument('--resolution',        type=int, default=1, help='resolution [1:H, 2:Q, 3:E]')
 
 args = parser.parse_args()
 
@@ -94,7 +95,7 @@ def test(params):
         print('Running %d out of %d'%(step, samples))
 
         # If you want to evaluate lower resolution results, just get results[1] or results[2]
-        disp = sess.run(model.results[0])
+        disp = sess.run(model.results[args.resolution-1])
         disparities[step] = disp[0,:,:,0].squeeze()
 
     print('Test done!')
