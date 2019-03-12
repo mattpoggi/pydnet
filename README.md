@@ -5,10 +5,10 @@ If you use this code in your projects, please cite our paper:
 ```
 @inproceedings{pydnet18,
   title     = {Towards real-time unsupervised monocular depth estimation on CPU},
-  author    = {Matteo Poggi and
-               Filippo Aleotti and
-               Fabio Tosi and
-               Stefano Mattoccia},
+  author    = {Poggi, Matteo and
+               Aleotti, Filippo and
+               Tosi, Fabio and
+               Mattoccia, Stefano},
   booktitle = {IEEE/JRS Conference on Intelligent Robots and Systems (IROS)},
   year = {2018}
 }
