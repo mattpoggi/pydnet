@@ -75,7 +75,7 @@ def main(_):
           end = time.time()
 
           disp_color = applyColorMap(disp[0,:,:,0]*20, 'plasma')
-          toShow = (np.concatenate((img, disp_color), 0)*255.).astype(np.uint8)
+          toShow = (np.concatenate((img[0], disp_color), 0)*255.).astype(np.uint8)
           toShow = cv2.resize(toShow, (width/2, height))
 
           cv2.imshow('pydnet', toShow)
