@@ -14,6 +14,10 @@ If you use this code in your projects, please cite our paper:
 }
 ```
 
+### Update: 
+If you are looking Android/iOS implementations of PyDnet, take a look here:
+https://github.com/FilippoAleotti/mobilePydnet
+
 For more details:
 [arXiv](https://arxiv.org/abs/1806.11430)
 
