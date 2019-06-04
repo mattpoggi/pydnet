@@ -1,4 +1,11 @@
 # PyDnet
+
+### Update: 
+```
+If you are looking Android/iOS implementations of PyDnet, take a look here:
+https://github.com/FilippoAleotti/mobilePydnet
+```
+
 This repository contains the source code of pydnet, proposed in the paper "Towards real-time unsupervised monocular depth estimation on CPU", IROS 2018.
 If you use this code in your projects, please cite our paper:
 
@@ -13,11 +20,6 @@ If you use this code in your projects, please cite our paper:
   year = {2018}
 }
 ```
-
-### Update: 
-If you are looking Android/iOS implementations of PyDnet, take a look here:
-https://github.com/FilippoAleotti/mobilePydnet
-
 For more details:
 [arXiv](https://arxiv.org/abs/1806.11430)
 
