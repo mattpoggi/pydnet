@@ -34,7 +34,7 @@ Demo video:
 To run pydnet, just launch
 
 ```
-python webcam.py --checkpoint_dir /checkpoint/IROS18/pydnet --resolution [1,2,3]
+python webcam.py --checkpoint_dir ./checkpoint/IROS18/pydnet --resolution [1,2,3]
 ```
 
 ## Train pydnet from scratch
