@@ -51,7 +51,7 @@ Then you can train pydnet inside monodepth framework.
 To get results on the Eigen split, just run
 
 ```
-python experiments.py --datapath PATH_TO_KITTI --filenames PATH_TO_FILELIST --checkpoint_dir /checkpoint/IROS18/pydnet --resolution [1,2,3]
+python experiments.py --datapath PATH_TO_KITTI --filenames PATH_TO_FILELIST --checkpoint_dir checkpoint/IROS18/pydnet --resolution [1,2,3]
 ```
 
 This script generates `disparity.npy`, that can be evaluated using the evaluation tools by Clément Godard 
