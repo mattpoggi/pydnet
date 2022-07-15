@@ -48,7 +48,7 @@ Demo video:
 
 ## Run pydnet on webcam stream
 
-To run pydnet, just launch
+To run PyDNet or PyDNet2, just launch
 
 ```
 python webcam.py --model [pydnet,pydnet2] --resolution [1,2,3]
