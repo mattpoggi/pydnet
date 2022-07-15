@@ -4,9 +4,13 @@
 If you are looking Android/iOS implementations of PyDnet, take a look here:
 https://github.com/FilippoAleotti/mobilePydnet
 
-This repository contains the source code of pydnet, proposed in the paper "Towards real-time unsupervised monocular depth estimation on CPU", IROS 2018.
+### Update v2:
+Demo code for PyDNet2 has been included!
+
+This repository contains the source code of PyDNet, proposed in the paper "Towards real-time unsupervised monocular depth estimation on CPU", IROS 2018, and PyDNet2, proposed in the paper "Real-Time Self-Supervised Monocular Depth Estimation Without GPU", T-ITS.
 If you use this code in your projects, please cite our paper:
 
+PyD-Net:
 ```
 @inproceedings{pydnet18,
   title     = {Towards real-time unsupervised monocular depth estimation on CPU},
@@ -18,11 +22,24 @@ If you use this code in your projects, please cite our paper:
   year = {2018}
 }
 ```
+
+PyD-Net2:
+```
+@article{poggi2022realtime,
+  title={Real-time Self-Supervised Monocular Depth Estimation Without GPU},
+  author={Poggi, Matteo and Tosi, Fabio and Aleotti, Filippo and Mattoccia, Stefano},
+  journal={IEEE Transactions on Intelligent Transportation Systems},
+  year={2022},
+}
+```
+
 For more details:
-[arXiv](https://arxiv.org/abs/1806.11430)
+[PyDNet (arXiv)](https://arxiv.org/abs/1806.11430)
+[PyDNet2 (IEEExplore)](https://ieeexplore.ieee.org/document/9733979)
 
 Demo video:
-[youtube](https://www.youtube.com/watch?v=Q6ao4Jrulns)
+[PyDNet](https://www.youtube.com/watch?v=Q6ao4Jrulns)
+[PyDNet2](https://www.youtube.com/watch?v=Q6ao4Jrulns)
 
 ## Requirements
 
@@ -34,7 +51,7 @@ Demo video:
 To run pydnet, just launch
 
 ```
-python webcam.py --checkpoint_dir ./checkpoint/IROS18/pydnet --resolution [1,2,3]
+python webcam.py --model [pydnet,pydnet2] --resolution [1,2,3]
 ```
 
 ## Train pydnet from scratch
