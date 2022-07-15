@@ -1,4 +1,4 @@
-# PyDnet
+# PyDNet & PyDNet2
 
 ### Update: 
 If you are looking Android/iOS implementations of PyDnet, take a look here:
