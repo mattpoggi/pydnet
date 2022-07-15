@@ -34,12 +34,16 @@ PyD-Net2:
 ```
 
 For more details:
+
 [PyDNet (arXiv)](https://arxiv.org/abs/1806.11430)
+
 [PyDNet2 (IEEExplore)](https://ieeexplore.ieee.org/document/9733979)
 
 Demo video:
+
 [PyDNet](https://www.youtube.com/watch?v=Q6ao4Jrulns)
-[PyDNet2](https://www.youtube.com/watch?v=Q6ao4Jrulns)
+
+[PyDNet2](https://www.youtube.com/watch?v=PCLmr8V456o)
 
 ## Requirements
 
