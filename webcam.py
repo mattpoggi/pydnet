@@ -37,8 +37,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 parser = argparse.ArgumentParser(description='Argument parser')
 
 """ Arguments related to network architecture"""
-parser.add_argument('--width', dest='width', type=int, default=512, help='width of input images')
-parser.add_argument('--height', dest='height', type=int, default=256, help='height of input images')
+parser.add_argument('--model', dest='model', type=str, choices=['pydnet', 'pydnet2'], default='pydnet', help='choose model')
 parser.add_argument('--resolution', dest='resolution', type=int, default=1, help='resolution [1:H, 2:Q, 3:E]')
 parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', type=str, default='checkpoint/IROS18/pydnet', help='checkpoint directory')
 
@@ -47,12 +46,16 @@ args = parser.parse_args()
 def main(_):
 
   with tf.Graph().as_default():
-    height = args.height
-    width = args.width
+    height = 256 if args.model == 'pydnet' else 192
+    width = 512 if args.model == 'pydnet2' else 640
+
     placeholders = {'im0':tf.placeholder(tf.float32,[None, None, None, 3], name='im0')}
 
     with tf.variable_scope("model") as scope:
-      model = pydnet(placeholders)
+      if args.model == 'pydnet':
+        model = pydnet(placeholders)
+      elif args.model == 'pydnet2':
+        model = pydnet2(placeholders)
 
     init = tf.group(tf.global_variables_initializer(),
                    tf.local_variables_initializer())
@@ -63,6 +66,9 @@ def main(_):
 
     with tf.Session() as sess:
         sess.run(init)
+        if args.model == 'pydnet2':
+          args.checkpoint_dir = 'checkpoint/ITS/pydnet2'
+
         loader.restore(sess, args.checkpoint_dir)
         while True:
           for i in range(4):
@@ -74,11 +80,15 @@ def main(_):
           disp = sess.run(model.results[args.resolution-1], feed_dict={placeholders['im0']: img})
           end = time.time()
 
-          disp_color = applyColorMap(disp[0,:,:,0]*20, 'plasma')
-          toShow = (np.concatenate((img[0], disp_color), 0)*255.).astype(np.uint8)
-          toShow = cv2.resize(toShow, (width/2, height))
+          color_scaling = 20
+          if args.model == 'pydnet2':
+            color_scaling = 1/64.
 
-          cv2.imshow('pydnet', toShow)
+          disp_color = applyColorMap(disp[0,:,:,0]*color_scaling, 'plasma')
+          toShow = (np.concatenate((img[0], disp_color), 0)*255.).astype(np.uint8)
+          toShow = cv2.resize(toShow, (width//2, height))
+
+          cv2.imshow(args.model, toShow)
           k = cv2.waitKey(1)         
           if k == 1048603 or k == 27: 
             break  # esc to quit
