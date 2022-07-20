@@ -47,7 +47,7 @@ Demo video:
 
 ## Requirements
 
-* `Tensorflow 1.8` (recommended) 
+* `Tensorflow 2`
 * `python packages` such as opencv, matplotlib
 
 ## Run pydnet on webcam stream
@@ -55,7 +55,23 @@ Demo video:
 To run PyDNet or PyDNet2, just launch
 
 ```
-python webcam.py --model [pydnet,pydnet2] --resolution [1,2,3]
+python demo.py --model [pydnet,pydnet2] --resolution [1,2,3]  # for webcam
+python demo.py --model [pydnet,pydnet2] --resolution [1,2,3] --src path_to_video_file  # for custom videofile
+```
+
+```
+options:
+  -h, --help            show this help message and exit
+  --src SRC             choose input for videocapture
+  --save_ratio SAVE_RATIO
+                        crop center of image to save aspect ratio
+  --host {cpu,gpu}      choose host
+  --model {pydnet,pydnet2}
+                        choose model
+  --resolution RESOLUTION
+                        resolution [1:H, 2:Q, 3:E]
+  --checkpoint_dir CHECKPOINT_DIR
+                        checkpoint directory
 ```
 
 ## Train pydnet from scratch

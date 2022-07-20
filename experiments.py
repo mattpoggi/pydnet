@@ -48,38 +48,38 @@ parser.add_argument('--resolution',        type=int, default=1, help='resolution
 args = parser.parse_args()
 
 def read_image(image_path):
-    image  = tf.image.decode_image(tf.read_file(args.datapath+'/'+image_path))
+    image  = tf.image.decode_image(tf.io.read_file(args.datapath+'/'+image_path))
     image.set_shape( [None, None, 3])
     image  = tf.image.convert_image_dtype(image,  tf.float32)
-    image  = tf.expand_dims(tf.image.resize_images(image,  [256, 512], tf.image.ResizeMethod.AREA), 0)
+    image  = tf.expand_dims(tf.image.resize(image,  [256, 512], tf.image.ResizeMethod.AREA), 0)
 
     return image
 
 def test(params):
 
-    input_queue = tf.train.string_input_producer([args.filenames], shuffle=False)
-    line_reader = tf.TextLineReader()
+    input_queue = tf.compat.v1.train.string_input_producer([args.filenames], shuffle=False)
+    line_reader = tf.compat.v1.TextLineReader()
     _, line = line_reader.read(input_queue)
-    img_path = tf.string_split([line]).values[0]
+    img_path = tf.compat.v1.string_split([line]).values[0]
     img = read_image(img_path)
 
     placeholders = {'im0':img}
 
-    with tf.variable_scope("model") as scope:    
+    with tf.compat.v1.variable_scope("model") as scope:    
       model = pydnet(placeholders)
 
     # SESSION
-    config = tf.ConfigProto(allow_soft_placement=True)
-    sess = tf.Session(config=config)
+    config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
+    sess = tf.compat.v1.Session(config=config)
 
     # SAVER
-    train_saver = tf.train.Saver()
+    train_saver = tf.compat.v1.train.Saver()
 
     # INIT
-    sess.run(tf.global_variables_initializer())
-    sess.run(tf.local_variables_initializer())
+    sess.run(tf.compat.v1.global_variables_initializer())
+    sess.run(tf.compat.v1.local_variables_initializer())
     coordinator = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
+    threads = tf.compat.v1.train.start_queue_runners(sess=sess, coord=coordinator)
 
     # RESTORE
     train_saver.restore(sess, args.checkpoint_dir)
@@ -114,4 +114,4 @@ def main(_):
     test(args)
 
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()

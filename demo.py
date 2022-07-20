@@ -31,17 +31,24 @@ import datetime
 from utils import *
 from pydnet import *
 
-# forces tensorflow to run on CPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 parser = argparse.ArgumentParser(description='Argument parser')
 
 """ Arguments related to network architecture"""
+parser.add_argument('--src', dest='src', type=str, default='0', help='choose input for videocapture')
+parser.add_argument('--save_ratio', dest='save_ratio', type=bool, default=False, help='crop center of image to save aspect ratio')
+parser.add_argument('--host', dest='host', type=str, choices=['cpu', 'gpu'], default='cpu', help='choose host')
 parser.add_argument('--model', dest='model', type=str, choices=['pydnet', 'pydnet2'], default='pydnet', help='choose model')
 parser.add_argument('--resolution', dest='resolution', type=int, default=1, help='resolution [1:H, 2:Q, 3:E]')
 parser.add_argument('--checkpoint_dir', dest='checkpoint_dir', type=str, default='checkpoint/IROS18/pydnet', help='checkpoint directory')
 
 args = parser.parse_args()
+
+if args.host == 'cpu':
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+elif args.host == 'gpu':
+    pass
+
 
 def main(_):
 
@@ -49,22 +56,27 @@ def main(_):
     height = 256 if args.model == 'pydnet' else 192
     width = 512 if args.model == 'pydnet2' else 640
 
-    placeholders = {'im0':tf.placeholder(tf.float32,[None, None, None, 3], name='im0')}
+    placeholders = {'im0':tf.compat.v1.placeholder(tf.float32,[None, None, None, 3], name='im0')}
 
-    with tf.variable_scope("model") as scope:
+    with tf.compat.v1.variable_scope("model") as scope:
       if args.model == 'pydnet':
         model = pydnet(placeholders)
       elif args.model == 'pydnet2':
         model = pydnet2(placeholders)
 
-    init = tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer())
+    init = tf.group(tf.compat.v1.global_variables_initializer(),
+                   tf.compat.v1.local_variables_initializer())
 
-    loader = tf.train.Saver()
-    saver = tf.train.Saver()
-    cam = cv2.VideoCapture(0)
+    loader = tf.compat.v1.train.Saver()
+    saver = tf.compat.v1.train.Saver()
+    src = args.src
+    try:
+        src = int(args.src)
+    except ValueError:
+        pass
+    cam = cv2.VideoCapture(src)
 
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
         if args.model == 'pydnet2':
           args.checkpoint_dir = 'checkpoint/ITS/pydnet2'
@@ -74,7 +86,11 @@ def main(_):
           for i in range(4):
             cam.grab()
           ret_val, img = cam.read() 
-          img = cv2.resize(img, (width, height)).astype(np.float32) / 255.
+
+          if args.save_ratio:
+            img = resize_with_aspect_ratio(img, width, height)
+          else:
+            img = cv2.resize(img, (width, height)).astype(np.float32) / 255.
           img = np.expand_dims(img, 0)
           start = time.time()
           disp = sess.run(model.results[args.resolution-1], feed_dict={placeholders['im0']: img})
@@ -86,13 +102,13 @@ def main(_):
 
           disp_color = applyColorMap(disp[0,:,:,0]*color_scaling, 'plasma')
           toShow = (np.concatenate((img[0], disp_color), 0)*255.).astype(np.uint8)
-          toShow = cv2.resize(toShow, (width//2, height))
+          toShow = cv2.resize(toShow, (width, height*2))
 
           cv2.imshow(args.model, toShow)
           k = cv2.waitKey(1)         
           if k == 1048603 or k == 27: 
             break  # esc to quit
-          if k == 1048688:
+          if k == ord('p'):
             cv2.waitKey(0) # 'p' to pause
 
           print("Time: " + str(end - start))
@@ -103,4 +119,4 @@ def main(_):
         cam.release()        
 
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()

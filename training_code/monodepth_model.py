@@ -69,21 +69,21 @@ class MonodepthModel(object):
         return gy
 
     def upsample_nn(self, x, ratio):
-        s = tf.shape(x)
+        s = tf.shape(input=x)
         h = s[1]
         w = s[2]
-        return tf.image.resize_nearest_neighbor(x, [h * ratio, w * ratio])
+        return tf.image.resize(x, [h * ratio, w * ratio], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 
     def scale_pyramid(self, img, num_scales):
         scaled_imgs = [] # don't need full res images
-        s = tf.shape(img)
+        s = tf.shape(input=img)
         h = s[1]
         w = s[2]
         for i in range(num_scales - 1):
             ratio = 2 ** (i + 1)
             nh = h / ratio
             nw = w / ratio
-            scaled_imgs.append(tf.cast(tf.image.resize_area(img, [nh, nw]), tf.float32))
+            scaled_imgs.append(tf.cast(tf.image.resize(img, [nh, nw], method=tf.image.ResizeMethod.AREA), tf.float32))
         return scaled_imgs
 
     def generate_image_left(self, img, disp):
@@ -117,8 +117,8 @@ class MonodepthModel(object):
         image_gradients_x = [self.gradient_x(img) for img in pyramid]
         image_gradients_y = [self.gradient_y(img) for img in pyramid]
 
-        weights_x = [tf.exp(-tf.reduce_mean(tf.abs(g), 3, keep_dims=True)) for g in image_gradients_x]
-        weights_y = [tf.exp(-tf.reduce_mean(tf.abs(g), 3, keep_dims=True)) for g in image_gradients_y]
+        weights_x = [tf.exp(-tf.reduce_mean(input_tensor=tf.abs(g), axis=3, keepdims=True)) for g in image_gradients_x]
+        weights_y = [tf.exp(-tf.reduce_mean(input_tensor=tf.abs(g), axis=3, keepdims=True)) for g in image_gradients_y]
 
         scales=6
         smoothness_x = [disp_gradients_x[i] * weights_x[i] for i in range(scales)]
@@ -127,7 +127,7 @@ class MonodepthModel(object):
 
     def build_model(self):
         with slim.arg_scope([slim.conv2d, slim.conv2d_transpose], activation_fn=tf.nn.elu):
-            with tf.variable_scope('model', reuse=self.reuse_variables):
+            with tf.compat.v1.variable_scope('model', reuse=self.reuse_variables):
 
                 self.left_pyramid  = self.scale_pyramid(self.left,  4)
                 if self.mode == 'train':
@@ -159,7 +159,7 @@ class MonodepthModel(object):
     def build_output(self):
         # STORE DISPARITIES
         self.num_scale = 6
-        with tf.variable_scope('disparities'):
+        with tf.compat.v1.variable_scope('disparities'):
             self.disp_est  = [self.disp2, self.disp3, self.disp4, self.disp5, self.disp6, self.disp7]
             self.disp_left_est  = [tf.expand_dims(d[:,:,:,0], 3) for d in self.disp_est]
             self.disp_right_est = [tf.expand_dims(d[:,:,:,1], 3) for d in self.disp_est]
@@ -169,34 +169,34 @@ class MonodepthModel(object):
 
     def finish_build_outputs(self):
         # GENERATE IMAGES
-        with tf.variable_scope('images'):
+        with tf.compat.v1.variable_scope('images'):
             self.left_est  = [self.generate_image_left(self.right_pyramid[i], self.disp_left_est[i])  for i in range(self.num_scale)]
             self.right_est = [self.generate_image_right(self.left_pyramid[i], self.disp_right_est[i]) for i in range(self.num_scale)]
 
         # LR CONSISTENCY
-        with tf.variable_scope('left-right'):
+        with tf.compat.v1.variable_scope('left-right'):
             self.right_to_left_disp = [self.generate_image_left(self.disp_right_est[i], self.disp_left_est[i])  for i in range(self.num_scale)]
             self.left_to_right_disp = [self.generate_image_right(self.disp_left_est[i], self.disp_right_est[i]) for i in range(self.num_scale)]
 
         # DISPARITY SMOOTHNESS
-        with tf.variable_scope('smoothness'):
+        with tf.compat.v1.variable_scope('smoothness'):
             self.disp_left_smoothness  = self.get_disparity_smoothness(self.disp_left_est,  self.left_pyramid)
             self.disp_right_smoothness = self.get_disparity_smoothness(self.disp_right_est, self.right_pyramid)
 
     def build_losses(self):
-        with tf.variable_scope('losses', reuse=self.reuse_variables):
+        with tf.compat.v1.variable_scope('losses', reuse=self.reuse_variables):
             # IMAGE RECONSTRUCTION
             # L1
             self.l1_left = [tf.abs( self.left_est[i] - self.left_pyramid[i]) for i in range(self.num_scale)]
-            self.l1_reconstruction_loss_left  = [tf.reduce_mean(l) for l in self.l1_left]
+            self.l1_reconstruction_loss_left  = [tf.reduce_mean(input_tensor=l) for l in self.l1_left]
             self.l1_right = [tf.abs(self.right_est[i] - self.right_pyramid[i]) for i in range(self.num_scale)]
-            self.l1_reconstruction_loss_right = [tf.reduce_mean(l) for l in self.l1_right]
+            self.l1_reconstruction_loss_right = [tf.reduce_mean(input_tensor=l) for l in self.l1_right]
 
             # SSIM
             self.ssim_left = [self.SSIM( self.left_est[i],  self.left_pyramid[i]) for i in range(self.num_scale)]
-            self.ssim_loss_left  = [tf.reduce_mean(s) for s in self.ssim_left]
+            self.ssim_loss_left  = [tf.reduce_mean(input_tensor=s) for s in self.ssim_left]
             self.ssim_right = [self.SSIM(self.right_est[i], self.right_pyramid[i]) for i in range(self.num_scale)]
-            self.ssim_loss_right = [tf.reduce_mean(s) for s in self.ssim_right]
+            self.ssim_loss_right = [tf.reduce_mean(input_tensor=s) for s in self.ssim_right]
 
             # WEIGTHED SUM
             self.image_loss_right = [self.params.alpha_image_loss * self.ssim_loss_right[i] + (1 - self.params.alpha_image_loss) * self.l1_reconstruction_loss_right[i] for i in range(self.num_scale)]
@@ -204,13 +204,13 @@ class MonodepthModel(object):
             self.image_loss = tf.add_n(self.image_loss_left + self.image_loss_right)
 
             # DISPARITY SMOOTHNESS
-            self.disp_left_loss  = [tf.reduce_mean(tf.abs(self.disp_left_smoothness[i]))  / 2 ** i for i in range(self.num_scale)]
-            self.disp_right_loss = [tf.reduce_mean(tf.abs(self.disp_right_smoothness[i])) / 2 ** i for i in range(self.num_scale)]
+            self.disp_left_loss  = [tf.reduce_mean(input_tensor=tf.abs(self.disp_left_smoothness[i]))  / 2 ** i for i in range(self.num_scale)]
+            self.disp_right_loss = [tf.reduce_mean(input_tensor=tf.abs(self.disp_right_smoothness[i])) / 2 ** i for i in range(self.num_scale)]
             self.disp_gradient_loss = tf.add_n(self.disp_left_loss + self.disp_right_loss)
 
             # LR CONSISTENCY
-            self.lr_left_loss  = [tf.reduce_mean(tf.abs(self.right_to_left_disp[i] - self.disp_left_est[i]))  for i in range(self.num_scale)]
-            self.lr_right_loss = [tf.reduce_mean(tf.abs(self.left_to_right_disp[i] - self.disp_right_est[i])) for i in range(self.num_scale)]
+            self.lr_left_loss  = [tf.reduce_mean(input_tensor=tf.abs(self.right_to_left_disp[i] - self.disp_left_est[i]))  for i in range(self.num_scale)]
+            self.lr_right_loss = [tf.reduce_mean(input_tensor=tf.abs(self.left_to_right_disp[i] - self.disp_right_est[i])) for i in range(self.num_scale)]
             self.lr_loss = tf.add_n(self.lr_left_loss + self.lr_right_loss)
 
             # TOTAL LOSS
@@ -220,23 +220,23 @@ class MonodepthModel(object):
         # SUMMARIES
         with tf.device('/cpu:0'):
             for i in range(self.num_scale):
-                tf.summary.scalar('ssim_loss_' + str(i+1), self.ssim_loss_left[i] + self.ssim_loss_right[i], collections=self.model_collection)
-                tf.summary.scalar('l1_loss_' + str(i+1), self.l1_reconstruction_loss_left[i] + self.l1_reconstruction_loss_right[i], collections=self.model_collection)
-                tf.summary.scalar('image_loss_' + str(i+1), self.image_loss_left[i] + self.image_loss_right[i], collections=self.model_collection)
-                tf.summary.scalar('disp_gradient_loss_' + str(i+1), self.disp_left_loss[i] + self.disp_right_loss[i], collections=self.model_collection)
-                tf.summary.scalar('lr_loss_' + str(i+1), self.lr_left_loss[i] + self.lr_right_loss[i], collections=self.model_collection)
-                tf.summary.image('disp_left_est_' + str(i+1), self.disp_left_est[i], max_outputs=1, collections=self.model_collection)
-                tf.summary.image('disp_right_est_' + str(i+1), self.disp_right_est[i], max_outputs=1, collections=self.model_collection)
+                tf.compat.v1.summary.scalar('ssim_loss_' + str(i+1), self.ssim_loss_left[i] + self.ssim_loss_right[i], collections=self.model_collection)
+                tf.compat.v1.summary.scalar('l1_loss_' + str(i+1), self.l1_reconstruction_loss_left[i] + self.l1_reconstruction_loss_right[i], collections=self.model_collection)
+                tf.compat.v1.summary.scalar('image_loss_' + str(i+1), self.image_loss_left[i] + self.image_loss_right[i], collections=self.model_collection)
+                tf.compat.v1.summary.scalar('disp_gradient_loss_' + str(i+1), self.disp_left_loss[i] + self.disp_right_loss[i], collections=self.model_collection)
+                tf.compat.v1.summary.scalar('lr_loss_' + str(i+1), self.lr_left_loss[i] + self.lr_right_loss[i], collections=self.model_collection)
+                tf.compat.v1.summary.image('disp_left_est_' + str(i+1), self.disp_left_est[i], max_outputs=1, collections=self.model_collection)
+                tf.compat.v1.summary.image('disp_right_est_' + str(i+1), self.disp_right_est[i], max_outputs=1, collections=self.model_collection)
 
                 if self.params.full_summary:
-                    tf.summary.image('left_est_' + str(i+1), self.left_est[i], max_outputs=1, collections=self.model_collection)
-                    tf.summary.image('right_est_' + str(i+1), self.right_est[i], max_outputs=1, collections=self.model_collection)
-                    tf.summary.image('ssim_left_'  + str(i+1), self.ssim_left[i],  max_outputs=1, collections=self.model_collection)
-                    tf.summary.image('ssim_right_' + str(i+1), self.ssim_right[i], max_outputs=1, collections=self.model_collection)
-                    tf.summary.image('l1_left_'  + str(i+1), self.l1_left[i],  max_outputs=1, collections=self.model_collection)
-                    tf.summary.image('l1_right_' + str(i+1), self.l1_right[i], max_outputs=1, collections=self.model_collection)
+                    tf.compat.v1.summary.image('left_est_' + str(i+1), self.left_est[i], max_outputs=1, collections=self.model_collection)
+                    tf.compat.v1.summary.image('right_est_' + str(i+1), self.right_est[i], max_outputs=1, collections=self.model_collection)
+                    tf.compat.v1.summary.image('ssim_left_'  + str(i+1), self.ssim_left[i],  max_outputs=1, collections=self.model_collection)
+                    tf.compat.v1.summary.image('ssim_right_' + str(i+1), self.ssim_right[i], max_outputs=1, collections=self.model_collection)
+                    tf.compat.v1.summary.image('l1_left_'  + str(i+1), self.l1_left[i],  max_outputs=1, collections=self.model_collection)
+                    tf.compat.v1.summary.image('l1_right_' + str(i+1), self.l1_right[i], max_outputs=1, collections=self.model_collection)
 
             if self.params.full_summary:
-                tf.summary.image('left',  self.left,   max_outputs=1, collections=self.model_collection)
-                tf.summary.image('right', self.right,  max_outputs=1, collections=self.model_collection)
+                tf.compat.v1.summary.image('left',  self.left,   max_outputs=1, collections=self.model_collection)
+                tf.compat.v1.summary.image('right', self.right,  max_outputs=1, collections=self.model_collection)
 
