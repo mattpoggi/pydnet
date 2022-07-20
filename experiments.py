@@ -22,51 +22,84 @@
 # SOFTWARE.
 
 from __future__ import division
+from pydnet import *
+import tensorflow.contrib.slim as slim
+import tensorflow as tf
+import time
+import re
+import argparse
+import numpy as np
 
 # only keep warnings and errors
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL']='1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
-import numpy as np
-import argparse
-import re
-import time
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
-
-from pydnet import *
 
 parser = argparse.ArgumentParser(description='Argument parser')
 
-parser.add_argument('--dataset',           type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
-parser.add_argument('--datapath',          type=str,   help='path to the data', required=True)
-parser.add_argument('--filenames',         type=str,   help='path to the filenames text file', required=True)
-parser.add_argument('--output_directory',  type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='.')
-parser.add_argument('--checkpoint_dir',        type=str,   help='path to a specific checkpoint to load', default='checkpoint/IROS18/pydnet')
-parser.add_argument('--resolution',        type=int, default=1, help='resolution [1:H, 2:Q, 3:E]')
+parser.add_argument(
+    '--dataset',
+    type=str,
+    help='dataset to train on, kitti, or cityscapes',
+    default='kitti')
+parser.add_argument(
+    '--datapath',
+    type=str,
+    help='path to the data',
+    required=True)
+parser.add_argument(
+    '--filenames',
+    type=str,
+    help='path to the filenames text file',
+    required=True)
+parser.add_argument(
+    '--output_directory',
+    type=str,
+    help='output directory for test disparities, if empty outputs to checkpoint folder',
+    default='.')
+parser.add_argument(
+    '--checkpoint_dir',
+    type=str,
+    help='path to a specific checkpoint to load',
+    default='checkpoint/IROS18/pydnet')
+parser.add_argument(
+    '--resolution',
+    type=int,
+    default=1,
+    help='resolution [1:H, 2:Q, 3:E]')
 
 args = parser.parse_args()
 
+
 def read_image(image_path):
-    image  = tf.image.decode_image(tf.io.read_file(args.datapath+'/'+image_path))
-    image.set_shape( [None, None, 3])
-    image  = tf.image.convert_image_dtype(image,  tf.float32)
-    image  = tf.expand_dims(tf.image.resize(image,  [256, 512], tf.image.ResizeMethod.AREA), 0)
+    image = tf.image.decode_image(
+        tf.io.read_file(
+            args.datapath +
+            '/' +
+            image_path))
+    image.set_shape([None, None, 3])
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.expand_dims(
+        tf.image.resize(
+            image, [
+                256, 512], tf.image.ResizeMethod.AREA), 0)
 
     return image
 
+
 def test(params):
 
-    input_queue = tf.compat.v1.train.string_input_producer([args.filenames], shuffle=False)
+    input_queue = tf.compat.v1.train.string_input_producer(
+        [args.filenames], shuffle=False)
     line_reader = tf.compat.v1.TextLineReader()
     _, line = line_reader.read(input_queue)
     img_path = tf.compat.v1.string_split([line]).values[0]
     img = read_image(img_path)
 
-    placeholders = {'im0':img}
+    placeholders = {'im0': img}
 
-    with tf.compat.v1.variable_scope("model") as scope:    
-      model = pydnet(placeholders)
+    with tf.compat.v1.variable_scope("model") as scope:
+        model = pydnet(placeholders)
 
     # SESSION
     config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
@@ -79,7 +112,8 @@ def test(params):
     sess.run(tf.compat.v1.global_variables_initializer())
     sess.run(tf.compat.v1.local_variables_initializer())
     coordinator = tf.train.Coordinator()
-    threads = tf.compat.v1.train.start_queue_runners(sess=sess, coord=coordinator)
+    threads = tf.compat.v1.train.start_queue_runners(
+        sess=sess, coord=coordinator)
 
     # RESTORE
     train_saver.restore(sess, args.checkpoint_dir)
@@ -92,11 +126,12 @@ def test(params):
     print('Testing {} frames'.format(samples))
     disparities = np.zeros((samples, 256, 512), dtype=np.float32)
     for step in range(samples):
-        print('Running %d out of %d'%(step, samples))
+        print('Running %d out of %d' % (step, samples))
 
-        # If you want to evaluate lower resolution results, just get results[1] or results[2]
-        disp = sess.run(model.results[args.resolution-1])
-        disparities[step] = disp[0,:,:,0].squeeze()
+        # If you want to evaluate lower resolution results, just get results[1]
+        # or results[2]
+        disp = sess.run(model.results[args.resolution - 1])
+        disparities[step] = disp[0, :, :, 0].squeeze()
 
     print('Test done!')
 
@@ -109,9 +144,11 @@ def test(params):
 
     print('Disparities saved!')
 
+
 def main(_):
 
     test(args)
+
 
 if __name__ == '__main__':
     tf.compat.v1.app.run()
